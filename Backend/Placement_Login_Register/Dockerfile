@@ -1,14 +1,17 @@
-# Use Java 17
-FROM openjdk:17-jdk-slim
+# Use official Java 17 runtime
+FROM eclipse-temurin:17-jdk
 
 # Set working directory
 WORKDIR /app
 
-# Copy all files
+# Copy project into container
 COPY . .
 
-# Build the project
-RUN ./mvnw clean package -DskipTests
+# Make Maven wrapper executable (safe check)
+RUN chmod +x mvnw || true
 
-# Run the jar file
-CMD ["java", "-jar", "target/Placement_regis_login-0.0.1-SNAPSHOT.jar"]
+# Build Spring Boot project
+RUN ./mvnw clean package -DskipTests || mvn clean package -DskipTests
+
+# Find and run generated JAR
+CMD ["sh", "-c", "java -jar target/*.jar"]
