@@ -1,17 +1,20 @@
-# Use official Java 17 runtime
-FROM eclipse-temurin:17-jdk
+# Stage 1: Build
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy project into container
 COPY . .
 
-# Make Maven wrapper executable (safe check)
-RUN chmod +x mvnw || true
+RUN chmod +x mvnw
+RUN ./mvnw clean package -DskipTests
 
-# Build Spring Boot project
-RUN ./mvnw clean package -DskipTests || mvn clean package -DskipTests
+# Stage 2: Run
+FROM eclipse-temurin:17-jdk
 
-# Find and run generated JAR
-CMD ["sh", "-c", "java -jar target/*.jar"]
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "app.jar"]
